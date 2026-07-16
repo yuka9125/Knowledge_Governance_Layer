@@ -1,0 +1,60 @@
+{
+  "dataset_name": "phase_f_demo_scenarios",
+  "synthetic_data": true,
+  "note": "Synthetic demo inputs for Phase F. These are not customer data.",
+  "fixtures": {
+    "before_approved_knowledge": "benchmark/demo/approved_knowledge_before.json",
+    "after_approved_knowledge": "benchmark/demo/approved_knowledge_after.json"
+  },
+  "scenarios": [
+    {
+      "id": "before-old-vpn-answer",
+      "scene": "before",
+      "purpose": "Old approved FAQ returns the old VPN answer before governance review.",
+      "api_check": true,
+      "expected_state": "before",
+      "query": "VPNにつながりません",
+      "expect_answerable": true,
+      "expect_knowledge_id": "demo-vpn-001",
+      "expect_answer_contains": "再起動"
+    },
+    {
+      "id": "governance-vpn-update-candidate",
+      "scene": "governance",
+      "purpose": "Distillation produces an existing FAQ update candidate for human review.",
+      "api_check": false,
+      "input_log": {
+        "source": "synthetic_inquiry_log",
+        "question": "VPNにつながりません",
+        "answer": "最新版VPNクライアントへ更新してから接続してください。",
+        "category": "ITサポート"
+      },
+      "expected_review": {
+        "matched_knowledge_id": "demo-vpn-001",
+        "p32_result": "P3-2確認（既存FAQ更新候補）",
+        "review_result": "既存FAQ更新"
+      }
+    },
+    {
+      "id": "after-updated-vpn-answer",
+      "scene": "after",
+      "purpose": "Approved updated VPN knowledge returns the new answer.",
+      "api_check": true,
+      "expected_state": "after",
+      "query": "VPNにつながりません",
+      "expect_answerable": true,
+      "expect_knowledge_id": "demo-vpn-001",
+      "expect_answer_contains": "最新版VPNクライアント"
+    },
+    {
+      "id": "no-match-human-review",
+      "scene": "no_match",
+      "purpose": "Unapproved or missing knowledge escalates to human review without guessing.",
+      "api_check": true,
+      "expected_state": "after",
+      "query": "承認済みになっていない申請期限を教えて",
+      "expect_answerable": false,
+      "expect_fallback": "human_review"
+    }
+  ]
+}

@@ -1,0 +1,4 @@
+# App Service (Oryx) 用のルート requirements。
+# デプロイ root はこのファイルを見て依存をインストールする。
+# 公開ランタイムは serving 層のみ。重い knowledge_distillation の依存は含めない。
+-r serving/requirements.txt

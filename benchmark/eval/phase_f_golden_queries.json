@@ -1,0 +1,33 @@
+{
+  "_note": "Synthetic/demo golden queries for Phase F-0. These are not customer data.",
+  "embedding_model_assumption": "text-embedding-3-large",
+  "serving_threshold": 0.8,
+  "cases": [
+    {
+      "id": "phase-f-after-vpn-colloquial",
+      "query": "VPNにつながりません",
+      "expect_answerable": true,
+      "expect_knowledge_id": "demo-vpn-001",
+      "note": "After scene: approved VPN update answer should be returned."
+    },
+    {
+      "id": "phase-f-after-vpn-formal",
+      "query": "VPNに接続できません",
+      "expect_answerable": true,
+      "expect_knowledge_id": "demo-vpn-001",
+      "note": "After scene: canonical approved VPN question should be returned."
+    },
+    {
+      "id": "phase-f-no-match-expense",
+      "query": "経費精算の申請方法を教えて",
+      "expect_answerable": false,
+      "note": "No-match scene: deployed demo fixture does not include this approved knowledge."
+    },
+    {
+      "id": "phase-f-no-match-deadline",
+      "query": "承認済みになっていない申請期限を教えて",
+      "expect_answerable": false,
+      "note": "No-match scene: unapproved deadline question must escalate."
+    }
+  ]
+}

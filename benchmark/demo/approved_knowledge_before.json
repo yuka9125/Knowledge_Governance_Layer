@@ -1,0 +1,11 @@
+[
+  {
+    "knowledge_id": "demo-vpn-001",
+    "question": "VPNにつながりません",
+    "answer": "VPNクライアントを再起動してから、もう一度接続してください。",
+    "category": "ITサポート",
+    "approved_status": "approved",
+    "approved_at": "2026-05-30T09:00:00+09:00",
+    "_note": "Synthetic/demo fixture for Phase F Before scene. This is not customer data."
+  }
+]

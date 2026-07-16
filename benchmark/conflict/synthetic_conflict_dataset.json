@@ -1,0 +1,218 @@
+{
+  "dataset_name": "phase_f0_synthetic_conflict_dataset",
+  "synthetic_data": true,
+  "note": "This is synthetic data for Phase F-0 benchmark preparation. It is not customer data.",
+  "embedding_model_assumption": "text-embedding-3-large",
+  "labels": [
+    "統合すべき",
+    "新旧矛盾",
+    "似てるが別物",
+    "無関係"
+  ],
+  "cases": [
+    {
+      "id": "merge-vpn-wording",
+      "label": "統合すべき",
+      "expected_conflict": false,
+      "expected_resolution": "既存FAQへ統合",
+      "similarity_large": 0.88,
+      "existing_faq": {
+        "knowledge_id": "faq-vpn-001",
+        "question": "VPNに接続できません",
+        "answer": "VPNクライアントを最新版へ更新してから再接続してください。"
+      },
+      "candidate": {
+        "candidate_id": "cand-vpn-001",
+        "question": "VPNにつながりません",
+        "answer": "最新版VPNクライアントへ更新し、再度接続してください。"
+      }
+    },
+    {
+      "id": "merge-password-wording",
+      "label": "統合すべき",
+      "expected_conflict": false,
+      "expected_resolution": "既存FAQへ統合",
+      "similarity_large": 0.86,
+      "existing_faq": {
+        "knowledge_id": "faq-password-001",
+        "question": "パスワードをリセットする方法を教えてください",
+        "answer": "社内IDポータルのパスワード再設定から本人確認後にリセットしてください。"
+      },
+      "candidate": {
+        "candidate_id": "cand-password-001",
+        "question": "社内パスワードを忘れた場合の対応方法",
+        "answer": "社内IDポータルで本人確認を行い、パスワードを再設定してください。"
+      }
+    },
+    {
+      "id": "merge-expense-wording",
+      "label": "統合すべき",
+      "expected_conflict": false,
+      "expected_resolution": "既存FAQへ統合",
+      "similarity_large": 0.85,
+      "existing_faq": {
+        "knowledge_id": "faq-expense-001",
+        "question": "経費精算の申請方法を教えてください",
+        "answer": "Workflowから経費精算フローを開き、領収書を添付して申請してください。"
+      },
+      "candidate": {
+        "candidate_id": "cand-expense-001",
+        "question": "領収書を添付して経費精算するには",
+        "answer": "Workflowの経費精算フローで領収書を添付し、承認申請してください。"
+      }
+    },
+    {
+      "id": "conflict-vpn-old-new",
+      "label": "新旧矛盾",
+      "expected_conflict": true,
+      "expected_resolution": "人間レビューで現行手順を確認",
+      "similarity_large": 0.80,
+      "existing_faq": {
+        "knowledge_id": "faq-vpn-002",
+        "question": "VPNに接続できません",
+        "answer": "旧VPNクライアントを利用してください。"
+      },
+      "candidate": {
+        "candidate_id": "cand-vpn-002",
+        "question": "VPNにつながらない場合の対応",
+        "answer": "新VPNクライアントへ更新してください。"
+      }
+    },
+    {
+      "id": "conflict-system-use",
+      "label": "新旧矛盾",
+      "expected_conflict": true,
+      "expected_resolution": "人間レビューで現行システムを確認",
+      "similarity_large": 0.79,
+      "existing_faq": {
+        "knowledge_id": "faq-expense-002",
+        "question": "経費精算はどのシステムで申請しますか",
+        "answer": "旧システムで申請してください。"
+      },
+      "candidate": {
+        "candidate_id": "cand-expense-002",
+        "question": "経費精算の申請先を教えてください",
+        "answer": "新システムで申請してください。"
+      }
+    },
+    {
+      "id": "conflict-availability",
+      "label": "新旧矛盾",
+      "expected_conflict": true,
+      "expected_resolution": "人間レビューで利用可否を確認",
+      "similarity_large": 0.76,
+      "existing_faq": {
+        "knowledge_id": "faq-wifi-001",
+        "question": "ゲストWi-Fiは利用できますか",
+        "answer": "ゲストWi-Fiは使用不可です。"
+      },
+      "candidate": {
+        "candidate_id": "cand-wifi-001",
+        "question": "来客用Wi-Fiの利用可否",
+        "answer": "ゲストWi-Fiは使用可能です。"
+      }
+    },
+    {
+      "id": "different-password-vpn",
+      "label": "似てるが別物",
+      "expected_conflict": false,
+      "expected_resolution": "別FAQとして扱う",
+      "similarity_large": 0.70,
+      "existing_faq": {
+        "knowledge_id": "faq-password-002",
+        "question": "社内IDのパスワードをリセットする方法",
+        "answer": "社内IDポータルからパスワードを再設定してください。"
+      },
+      "candidate": {
+        "candidate_id": "cand-vpn-password-001",
+        "question": "VPN接続用の証明書パスワードを忘れた場合",
+        "answer": "VPN証明書の再発行を情報システム部へ依頼してください。"
+      }
+    },
+    {
+      "id": "different-expense-deadline",
+      "label": "似てるが別物",
+      "expected_conflict": false,
+      "expected_resolution": "別FAQとして扱う",
+      "similarity_large": 0.69,
+      "existing_faq": {
+        "knowledge_id": "faq-expense-003",
+        "question": "経費精算の申請方法",
+        "answer": "Workflowから経費精算フローを申請してください。"
+      },
+      "candidate": {
+        "candidate_id": "cand-expense-deadline-001",
+        "question": "経費精算の申請期限",
+        "answer": "申請期限は所属部門の経理担当へ確認してください。"
+      }
+    },
+    {
+      "id": "different-wifi-printer",
+      "label": "似てるが別物",
+      "expected_conflict": false,
+      "expected_resolution": "別FAQとして扱う",
+      "similarity_large": 0.68,
+      "existing_faq": {
+        "knowledge_id": "faq-wifi-002",
+        "question": "社内Wi-Fiの接続方法",
+        "answer": "端末設定から社内Wi-Fiを選択し、社内IDで認証してください。"
+      },
+      "candidate": {
+        "candidate_id": "cand-printer-001",
+        "question": "社内プリンタの接続方法",
+        "answer": "プリンタ一覧から拠点の複合機を追加してください。"
+      }
+    },
+    {
+      "id": "unrelated-weather",
+      "label": "無関係",
+      "expected_conflict": false,
+      "expected_resolution": "FAQ対象外または新規候補として別扱い",
+      "similarity_large": 0.22,
+      "existing_faq": {
+        "knowledge_id": "faq-vpn-003",
+        "question": "VPNに接続できません",
+        "answer": "最新版VPNクライアントへ更新してください。"
+      },
+      "candidate": {
+        "candidate_id": "cand-weather-001",
+        "question": "今日の天気を教えてください",
+        "answer": "天気情報は承認済みナレッジの対象外です。"
+      }
+    },
+    {
+      "id": "unrelated-cafeteria",
+      "label": "無関係",
+      "expected_conflict": false,
+      "expected_resolution": "FAQ対象外または新規候補として別扱い",
+      "similarity_large": 0.25,
+      "existing_faq": {
+        "knowledge_id": "faq-password-003",
+        "question": "パスワードをリセットする方法",
+        "answer": "社内IDポータルから再設定してください。"
+      },
+      "candidate": {
+        "candidate_id": "cand-cafeteria-001",
+        "question": "社員食堂の営業時間を教えてください",
+        "answer": "社員食堂の営業時間は総務ポータルを確認してください。"
+      }
+    },
+    {
+      "id": "unrelated-holiday",
+      "label": "無関係",
+      "expected_conflict": false,
+      "expected_resolution": "FAQ対象外または新規候補として別扱い",
+      "similarity_large": 0.18,
+      "existing_faq": {
+        "knowledge_id": "faq-expense-004",
+        "question": "経費精算の申請方法",
+        "answer": "Workflowから経費精算フローを申請してください。"
+      },
+      "candidate": {
+        "candidate_id": "cand-holiday-001",
+        "question": "年末年始の休業日はいつですか",
+        "answer": "休業日は人事総務からの案内を確認してください。"
+      }
+    }
+  ]
+}

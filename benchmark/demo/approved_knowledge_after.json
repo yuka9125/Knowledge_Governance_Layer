@@ -1,0 +1,11 @@
+[
+  {
+    "knowledge_id": "demo-vpn-001",
+    "question": "VPNにつながりません",
+    "answer": "最新版VPNクライアントへ更新してから接続してください。更新後も接続できない場合は、端末を再起動してから再度接続を試してください。",
+    "category": "ITサポート",
+    "approved_status": "approved",
+    "approved_at": "2026-05-30T10:00:00+09:00",
+    "_note": "Synthetic/demo fixture for Phase F After scene. This is not customer data."
+  }
+]

@@ -1,0 +1,47 @@
+[
+  {
+    "knowledge_id": "demo-vpn-001",
+    "question": "VPNにつながりません",
+    "answer": "VPNクライアントを再起動してから、もう一度接続してください。",
+    "category": "ITサポート",
+    "approved_status": "approved",
+    "approved_at": "2026-01-10T10:00:00+09:00",
+    "_note": "合成データ（デモBefore＝旧FAQ）。distillationの比較元。実顧客データではない。"
+  },
+  {
+    "knowledge_id": "demo-expense-001",
+    "question": "経費精算の申請方法を教えてください",
+    "answer": "Workflowから経費精算フローを開き、領収書を添付して申請してください。",
+    "category": "経理",
+    "approved_status": "approved",
+    "approved_at": "2026-01-10T10:00:00+09:00",
+    "_note": "合成データ（デモBefore＝旧FAQ）。distillationの比較元。実顧客データではない。"
+  },
+  {
+    "knowledge_id": "demo-password-001",
+    "question": "パスワードをリセットする方法を教えてください",
+    "answer": "社内IDポータルのパスワード再設定から本人確認後にリセットしてください。",
+    "category": "認証",
+    "approved_status": "approved",
+    "approved_at": "2026-01-10T10:00:00+09:00",
+    "_note": "合成データ（デモBefore＝旧FAQ）。distillationの比較元。実顧客データではない。"
+  },
+  {
+    "knowledge_id": "demo-wifi-001",
+    "question": "ゲストWi-Fiは利用できますか",
+    "answer": "ゲストWi-Fiは使用不可です。",
+    "category": "ネットワーク",
+    "approved_status": "approved",
+    "approved_at": "2026-01-10T10:00:00+09:00",
+    "_note": "合成データ（デモBefore＝旧FAQ）。distillationの比較元。実顧客データではない。"
+  },
+  {
+    "knowledge_id": "demo-printer-001",
+    "question": "社内プリンタの接続方法を教えてください",
+    "answer": "プリンタ一覧から拠点の複合機を追加してください。",
+    "category": "ITサポート",
+    "approved_status": "approved",
+    "approved_at": "2026-01-10T10:00:00+09:00",
+    "_note": "合成データ（デモBefore＝旧FAQ）。distillationの比較元。実顧客データではない。"
+  }
+]

@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Knowledge Governance Chat</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%232563eb'/%3E%3Cpath d='M18 18h28v6H18zm0 11h28v6H18zm0 11h18v6H18z' fill='white'/%3E%3C/svg%3E" />
+  <style>
+    :root {
+      --bg: #0f172a;
+      --panel: #ffffff;
+      --panel-2: #f8fafc;
+      --line: #e5e9f0;
+      --brand: #2563eb;
+      --brand-2: #1d4ed8;
+      --user: #2563eb;
+      --bot: #ffffff;
+      --text: #1e293b;
+      --muted: #64748b;
+      --ok: #059669;
+      --warn: #d97706;
+      --shadow: 0 10px 30px rgba(15, 23, 42, .12);
+    }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; margin: 0; }
+    body {
+      font-family: system-ui, -apple-system, "Segoe UI", "Hiragino Kaku Gothic ProN", "Noto Sans JP", sans-serif;
+      color: var(--text);
+      background: radial-gradient(1200px 600px at 70% -10%, #1e3a8a 0%, #0f172a 55%) fixed;
+      display: flex; align-items: center; justify-content: center; padding: 18px;
+    }
+    .app {
+      width: 100%; max-width: 760px; height: min(88vh, 760px);
+      background: var(--panel); border-radius: 18px; box-shadow: var(--shadow);
+      display: flex; flex-direction: column; overflow: hidden;
+    }
+
+    /* Header */
+    header {
+      display: flex; align-items: center; gap: 12px;
+      padding: 16px 20px; color: #fff;
+      background: linear-gradient(120deg, var(--brand) 0%, var(--brand-2) 100%);
+    }
+    .logo {
+      width: 38px; height: 38px; border-radius: 10px; flex: none;
+      background: rgba(255,255,255,.16); display: grid; place-items: center;
+      font-size: 20px;
+    }
+    .title h1 { margin: 0; font-size: 16px; font-weight: 700; letter-spacing: .2px; }
+    .title p { margin: 2px 0 0; font-size: 12px; opacity: .85; }
+    .badge {
+      margin-left: auto; font-size: 11px; font-weight: 600;
+      background: rgba(255,255,255,.18); padding: 5px 10px; border-radius: 999px;
+      display: inline-flex; align-items: center; gap: 6px;
+    }
+    .dot-ok { width: 7px; height: 7px; border-radius: 50%; background: #34d399; box-shadow: 0 0 0 3px rgba(52,211,153,.25); }
+
+    /* Log */
+    #log {
+      flex: 1; overflow-y: auto; padding: 22px 20px;
+      background: var(--panel-2);
+      display: flex; flex-direction: column; gap: 16px;
+    }
+    .row { display: flex; gap: 10px; align-items: flex-end; max-width: 84%; }
+    .row.user { align-self: flex-end; flex-direction: row-reverse; }
+    .avatar {
+      width: 30px; height: 30px; border-radius: 50%; flex: none;
+      display: grid; place-items: center; font-size: 15px; color: #fff;
+    }
+    .row.bot .avatar { background: linear-gradient(135deg, #6366f1, #2563eb); }
+    .row.user .avatar { background: #334155; }
+    .bubble {
+      padding: 11px 15px; border-radius: 16px; line-height: 1.65; font-size: 14px;
+      white-space: pre-wrap; word-break: break-word;
+    }
+    .row.bot .bubble {
+      background: var(--bot); border: 1px solid var(--line);
+      border-bottom-left-radius: 4px; box-shadow: 0 1px 2px rgba(15,23,42,.04);
+    }
+    .row.user .bubble {
+      background: var(--user); color: #fff; border-bottom-right-radius: 4px;
+    }
+    .name { font-size: 11px; color: var(--muted); margin: 0 4px 3px; }
+    .row.user .name { text-align: right; }
+
+    /* typing */
+    .typing { display: inline-flex; gap: 4px; padding: 4px 2px; }
+    .typing span {
+      width: 7px; height: 7px; border-radius: 50%; background: #94a3b8;
+      animation: blink 1.2s infinite ease-in-out;
+    }
+    .typing span:nth-child(2) { animation-delay: .2s; }
+    .typing span:nth-child(3) { animation-delay: .4s; }
+    @keyframes blink { 0%, 80%, 100% { opacity: .25; transform: translateY(0); } 40% { opacity: 1; transform: translateY(-2px); } }
+
+    /* suggestions */
+    .suggest { display: flex; flex-wrap: wrap; gap: 8px; padding: 0 20px 12px; background: var(--panel-2); }
+    .chip {
+      font-size: 12px; color: var(--brand); background: #eef2ff;
+      border: 1px solid #dbe3ff; border-radius: 999px; padding: 6px 12px; cursor: pointer;
+      transition: background .15s;
+    }
+    .chip:hover { background: #e0e7ff; }
+
+    /* input */
+    form {
+      display: flex; gap: 10px; padding: 14px 16px; background: var(--panel);
+      border-top: 1px solid var(--line);
+    }
+    #q {
+      flex: 1; padding: 12px 14px; border: 1px solid var(--line); border-radius: 12px;
+      font-size: 14px; outline: none; transition: border-color .15s, box-shadow .15s;
+    }
+    #q:focus { border-color: var(--brand); box-shadow: 0 0 0 3px rgba(37,99,235,.15); }
+    #send {
+      flex: none; width: 46px; border: none; border-radius: 12px; cursor: pointer;
+      background: var(--brand); color: #fff; font-size: 18px; display: grid; place-items: center;
+      transition: background .15s, opacity .15s;
+    }
+    #send:hover { background: var(--brand-2); }
+    #send:disabled { opacity: .5; cursor: default; }
+
+    @media (max-width: 480px) {
+      body { padding: 0; }
+      .app { height: 100vh; max-width: none; border-radius: 0; }
+      .row { max-width: 92%; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <div class="logo">🛡️</div>
+      <div class="title">
+        <h1>Knowledge Governance Chat</h1>
+        <p>承認済みナレッジのみに基づいて回答します</p>
+      </div>
+      <span class="badge"><span class="dot-ok"></span>Governed</span>
+    </header>
+
+    <div id="log">
+      <div class="row bot">
+        <div class="avatar">🤖</div>
+        <div>
+          <div class="name">サポートエージェント</div>
+          <div class="bubble">こんにちは。社内の<strong>承認済みナレッジ</strong>に基づいてお答えします。
+該当がない場合は、推測せず担当部門への確認をご案内します。下の例から試せます。</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="suggest" id="suggest">
+      <button class="chip" type="button">VPNに接続できません</button>
+      <button class="chip" type="button">パスワードをリセットする方法を教えてください</button>
+      <button class="chip" type="button">経費精算の申請方法を教えてください</button>
+    </div>
+
+    <form id="form">
+      <input id="q" type="text" placeholder="質問を入力…" autocomplete="off" autofocus />
+      <button id="send" type="submit" title="送信">➤</button>
+    </form>
+  </div>
+
+  <script>
+    const log = document.getElementById("log");
+    const form = document.getElementById("form");
+    const input = document.getElementById("q");
+    const sendBtn = document.getElementById("send");
+
+    function el(tag, cls, text) {
+      const e = document.createElement(tag);
+      if (cls) e.className = cls;
+      if (text != null) e.textContent = text;
+      return e;
+    }
+
+    function addRow(who, label, avatar) {
+      const row = el("div", "row " + who);
+      const av = el("div", "avatar", avatar);
+      const col = el("div");
+      col.appendChild(el("div", "name", label));
+      const bubble = el("div", "bubble");
+      col.appendChild(bubble);
+      row.appendChild(av);
+      row.appendChild(col);
+      log.appendChild(row);
+      log.scrollTop = log.scrollHeight;
+      return bubble;
+    }
+
+    function showTyping(bubble) {
+      bubble.innerHTML = '<span class="typing"><span></span><span></span><span></span></span>';
+    }
+
+    async function ask(question) {
+      addRow("user", "あなた", "🙂").textContent = question;
+      const bubble = addRow("bot", "サポートエージェント", "🤖");
+      showTyping(bubble);
+      sendBtn.disabled = true;
+      try {
+        const res = await fetch("/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ question }),
+        });
+        const data = await res.json();
+        bubble.textContent = res.ok
+          ? (data.answer ?? "(空の応答)")
+          : ((data.error ?? "エラーが発生しました") + (data.detail ? "\n" + data.detail : ""));
+      } catch (err) {
+        bubble.textContent = "通信エラー: " + err;
+      } finally {
+        sendBtn.disabled = false;
+        input.focus();
+        log.scrollTop = log.scrollHeight;
+      }
+    }
+
+    form.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const q = input.value.trim();
+      if (!q) return;
+      input.value = "";
+      ask(q);
+    });
+
+    document.getElementById("suggest").addEventListener("click", (e) => {
+      if (e.target.classList.contains("chip")) ask(e.target.textContent);
+    });
+  </script>
+</body>
+</html>

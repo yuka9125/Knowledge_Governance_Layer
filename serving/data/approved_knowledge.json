@@ -1,0 +1,74 @@
+[
+  {
+    "knowledge_id": "demo-vpn-001",
+    "question": "VPNに接続できません",
+    "answer": "最新版のVPNクライアントへ更新してから接続してください。旧クライアントの再起動だけでは解決しないことが増えています。更新後も接続できない場合は端末を再起動してください。",
+    "category": "ITサポート",
+    "approved_status": "approved",
+    "approved_at": "2026-05-31T10:00:00+09:00"
+  },
+  {
+    "knowledge_id": "demo-wifi-001",
+    "question": "ゲストWi-Fiは利用できますか",
+    "answer": "現在はゲストWi-Fiを利用できます。受付で当日発行のゲストパスコードを取得してください。",
+    "category": "ネットワーク",
+    "approved_status": "approved",
+    "approved_at": "2026-05-31T10:00:00+09:00"
+  },
+  {
+    "knowledge_id": "demo-mfa-001",
+    "question": "多要素認証(MFA)の設定方法を教えてください",
+    "answer": "認証アプリ（Authenticator）を登録してください。SMS認証は順次終了します。",
+    "category": "認証",
+    "approved_status": "approved",
+    "approved_at": "2026-05-31T10:00:00+09:00"
+  },
+  {
+    "knowledge_id": "demo-share-001",
+    "question": "共有フォルダにアクセスできません",
+    "answer": "共有フォルダは FS02 へ移行しました。FS02 の共有パスを使用してください。FS01 は接続できません。",
+    "category": "ITサポート",
+    "approved_status": "approved",
+    "approved_at": "2026-05-31T10:00:00+09:00"
+  },
+  {
+    "knowledge_id": "demo-password-001",
+    "question": "パスワードをリセットする方法を教えてください",
+    "answer": "社内IDポータルのパスワード再設定から本人確認のうえリセットしてください。本人確認ができない場合は情報システム部門へ連絡してください。",
+    "category": "認証",
+    "approved_status": "approved",
+    "approved_at": "2026-05-31T10:00:00+09:00"
+  },
+  {
+    "knowledge_id": "demo-expense-001",
+    "question": "経費精算の申請方法を教えてください",
+    "answer": "Workflowの経費精算フローから領収書を添付して申請してください。承認ルートは所属部門の経理担当に従ってください。",
+    "category": "経理",
+    "approved_status": "approved",
+    "approved_at": "2026-05-31T10:00:00+09:00"
+  },
+  {
+    "knowledge_id": "demo-printer-001",
+    "question": "社内プリンタの接続方法を教えてください",
+    "answer": "プリンタ一覧から拠点の複合機を追加してください。Wi-Fi接続手順とは別の設定です。",
+    "category": "ITサポート",
+    "approved_status": "approved",
+    "approved_at": "2026-05-31T10:00:00+09:00"
+  },
+  {
+    "knowledge_id": "demo-meeting-001",
+    "question": "会議室の予約方法を教えてください",
+    "answer": "グループウェアの施設予約メニューから会議室と時間帯を選んで予約してください。",
+    "category": "総務",
+    "approved_status": "approved",
+    "approved_at": "2026-05-31T10:00:00+09:00"
+  },
+  {
+    "knowledge_id": "demo-remote-001",
+    "question": "在宅勤務の申請方法を教えてください",
+    "answer": "勤怠システムの在宅勤務申請から申請し、上長の承認を受けてください。",
+    "category": "人事",
+    "approved_status": "approved",
+    "approved_at": "2026-05-31T10:00:00+09:00"
+  }
+]

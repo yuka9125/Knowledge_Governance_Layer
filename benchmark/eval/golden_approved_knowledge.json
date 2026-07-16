@@ -1,0 +1,38 @@
+[
+  {
+    "knowledge_id": "k-001",
+    "question": "VPNに接続できません",
+    "answer": "最新版VPNクライアントへ更新し、社内ポータルの手順に従って再接続してください。",
+    "category": "質問",
+    "approved_status": "approved",
+    "approved_at": "2026-05-29T10:00:00+09:00",
+    "_note": "合成データ（golden query評価用）。実顧客データではない。"
+  },
+  {
+    "knowledge_id": "k-002",
+    "question": "パスワードをリセットする方法を教えてください",
+    "answer": "社内IDポータルの「パスワード再設定」から本人確認の上でリセットしてください。",
+    "category": "質問",
+    "approved_status": "approved",
+    "approved_at": "2026-05-29T10:00:00+09:00",
+    "_note": "合成データ（golden query評価用）。実顧客データではない。"
+  },
+  {
+    "knowledge_id": "k-003",
+    "question": "経費精算の申請方法を教えてください",
+    "answer": "イントラマートのWorkflowから経費精算フローを開き、領収書を添付して申請してください。",
+    "category": "質問",
+    "approved_status": "approved",
+    "approved_at": "2026-05-29T10:00:00+09:00",
+    "_note": "合成データ（golden query評価用）。実顧客データではない。"
+  },
+  {
+    "knowledge_id": "k-004",
+    "question": "社内Wi-Fiのパスワードはどこで確認できますか",
+    "answer": "情報システム部のポータル「ネットワーク情報」ページで最新のWi-Fiパスワードを確認できます。",
+    "category": "質問",
+    "approved_status": "approved",
+    "approved_at": "2026-05-29T10:00:00+09:00",
+    "_note": "合成データ（golden query評価用）。実顧客データではない。"
+  }
+]

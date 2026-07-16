@@ -1,0 +1,12 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+
+# 環境変数・秘密情報
+.env
+
+# 生成・出力データ
+data/*
+!data/approved_knowledge.json

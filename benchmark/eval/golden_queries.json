@@ -1,0 +1,53 @@
+{
+  "_note": "合成データ（golden query）。実顧客の問い合わせではない。Governed Knowledge APIの回帰・品質チェック用。",
+  "approved_knowledge_fixture": "golden_approved_knowledge.json",
+  "cases": [
+    {
+      "id": "g-exact-vpn",
+      "query": "VPNに接続できません",
+      "expect_answerable": true,
+      "expect_knowledge_id": "k-001",
+      "note": "完全一致"
+    },
+    {
+      "id": "g-partial-vpn",
+      "query": "VPNに接続できません。在宅勤務中です",
+      "expect_answerable": true,
+      "expect_knowledge_id": "k-001",
+      "note": "承認済み質問を含む部分一致"
+    },
+    {
+      "id": "g-exact-password",
+      "query": "パスワードをリセットする方法を教えてください",
+      "expect_answerable": true,
+      "expect_knowledge_id": "k-002",
+      "note": "完全一致"
+    },
+    {
+      "id": "g-exact-expense",
+      "query": "経費精算の申請方法を教えてください",
+      "expect_answerable": true,
+      "expect_knowledge_id": "k-003",
+      "note": "完全一致"
+    },
+    {
+      "id": "g-exact-wifi",
+      "query": "社内Wi-Fiのパスワードはどこで確認できますか",
+      "expect_answerable": true,
+      "expect_knowledge_id": "k-004",
+      "note": "完全一致"
+    },
+    {
+      "id": "g-miss-weather",
+      "query": "本日の社内の天気を教えてください",
+      "expect_answerable": false,
+      "note": "承認済みに無い無関係な質問はエスカレーション"
+    },
+    {
+      "id": "g-miss-retirement",
+      "query": "退職手続きの締め切りはいつですか",
+      "expect_answerable": false,
+      "note": "承認済みに無い質問はエスカレーション"
+    }
+  ]
+}
