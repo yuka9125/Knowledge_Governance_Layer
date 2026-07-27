@@ -874,7 +874,9 @@ class Phase3Processor:
         self.gid_tracker: Optional[GIDTracker] = None
         self.source_df: Optional[pd.DataFrame] = None
         self.faq_checked: bool = False
-        self.faq_checked: bool = False
+        # 最終結果の付随出力（Excelと同じ内容をJSON/CSVでも残す）
+        self.final_json_path: Optional[str] = None
+        self.final_csv_path: Optional[str] = None
 
     def run(
         self,
@@ -899,7 +901,6 @@ class Phase3Processor:
         self.processing_records = processing_records or {}
         self.gid_tracker = gid_tracker or GIDTracker()
         self.source_df = df.copy()
-        self.faq_checked = faq_df is not None and len(faq_df) > 0
         self.faq_checked = faq_df is not None and len(faq_df) > 0
 
         # Phase 3-1: Q内重複除去
@@ -969,6 +970,10 @@ class Phase3Processor:
         knowledge_candidates = self._build_knowledge_candidates(final_df)
 
         excel_path = self._export_final_excel(knowledge_candidates)
+
+        # Excelと同じナレッジ候補をJSON / CSVでも出力する
+        # （CSVはExcel以外のツールやスクリプトからの再利用向け）
+        self._export_final_results(knowledge_candidates)
 
         return final_df, self.processing_records, self.gid_tracker, excel_path
 
@@ -1285,8 +1290,8 @@ class Phase3Processor:
 
     def _export_final_results(
         self, knowledge_candidates: List[Dict[str, Any]]
-    ):
-        """最終結果をJSON/CSVで出力"""
+    ) -> Tuple[str, str]:
+        """最終結果をJSON/CSVで出力する（同一項目・同一列順）。"""
         os.makedirs(self.output_dir, exist_ok=True)
         csv_columns = [
             "knowledge_id",
@@ -1337,6 +1342,7 @@ class Phase3Processor:
         csv_rows = []
         for item in knowledge_candidates:
             csv_item = dict(item)
+            # source_logs は配列なのでCSVではJSON文字列にして情報を落とさない
             csv_item["source_logs"] = json.dumps(
                 csv_item.get("source_logs", []), ensure_ascii=False
             )
@@ -1345,6 +1351,10 @@ class Phase3Processor:
             csv_path, index=False, encoding="utf-8-sig"
         )
         logger.info(f"最終CSV出力: {csv_path}")
+
+        self.final_json_path = json_path
+        self.final_csv_path = csv_path
+        return json_path, csv_path
 
 
 # ================================================================================

@@ -2,18 +2,30 @@
 # -*- coding: utf-8 -*-
 """
 レビュー済みExcelから承認済みKnowledgeを出力する。
+
+出力はJSON（serving が参照する契約ファイル）を基本としつつ、同じ内容のCSVも
+併せて出力する。upsertのベースはJSON/CSVのどちらでも読み込める。
 """
 
 from __future__ import annotations
 
 import argparse
-import json
 import re
 from datetime import datetime, timezone, timedelta
 from pathlib import Path
 from typing import Any, Dict, List
 
 from openpyxl import load_workbook
+
+from knowledge_distillation.approved_knowledge_io import (
+    CSV_FORMAT,
+    JSON_FORMAT,
+    companion_path,
+    detect_format,
+    read_approved_knowledge,
+    resolve_existing_path,
+    write_approved_knowledge_both,
+)
 
 
 SHEET_NAME = "最終ナレッジ候補一覧"
@@ -180,34 +192,31 @@ def merge_approved_knowledge(
     return [merged[kid] for kid in order]
 
 
-def _read_json_list(path: str | Path) -> List[Dict[str, str]]:
-    """既存の approved_knowledge.json を読む（無い/壊れていれば空）。"""
-    target = Path(path)
-    if not target.exists():
+def _read_base_items(path: str | Path) -> List[Dict[str, str]]:
+    """upsertのベースを読む。指定が無ければ同名の別フォーマットも探す。"""
+    resolved = resolve_existing_path(path)
+    if resolved is None:
         return []
-    try:
-        with target.open("r", encoding="utf-8") as f:
-            data = json.load(f)
-    except (json.JSONDecodeError, OSError):
-        return []
-    if not isinstance(data, list):
-        return []
-    return [item for item in data if isinstance(item, dict)]
+    return read_approved_knowledge(resolved)
 
 
-def export_approved_knowledge_from_excel(
+def export_approved_knowledge_files(
     excel_path_or_file: str | Path | Any,
     output_path: str | Path,
     approved_at: str | None = None,
     base_path: str | Path | None = None,
     merge: bool = True,
-) -> Path:
-    """レビュー済みExcelから approved_knowledge.json を出力する。
+    csv_output_path: str | Path | None = None,
+) -> Dict[str, Path]:
+    """レビュー済みExcelから approved_knowledge を JSON と CSV で出力する。
 
-    merge=True（既定）：既存の approved_knowledge.json（base_path、未指定なら output_path）に
-    対して knowledge_id で upsert する。既存FAQの更新は既存IDに上書き、新規は追加するため
-    重複が出にくい。
-    merge=False：従来どおり「採用行のスナップショット」を上書き出力する。
+    戻り値は {"json": Path, "csv": Path}。
+    output_path は .json / .csv のどちらでもよく、指定しなかった側は同名の
+    別拡張子に出力する（内容は同じ）。
+
+    merge=True（既定）：既存の approved_knowledge（base_path、未指定なら output_path。
+    JSON/CSVのどちらでも読める）に対して knowledge_id で upsert する。
+    merge=False：採用行のスナップショットで上書きする。
     """
     approved_items = load_approved_knowledge_from_excel(
         excel_path_or_file=excel_path_or_file,
@@ -217,33 +226,78 @@ def export_approved_knowledge_from_excel(
 
     if merge:
         base_source = base_path if base_path is not None else output_path
-        base_items = _read_json_list(base_source)
+        base_items = _read_base_items(base_source)
         result_items = merge_approved_knowledge(base_items, approved_items)
     else:
         result_items = approved_items
 
-    target = Path(output_path)
-    target.parent.mkdir(parents=True, exist_ok=True)
-    with target.open("w", encoding="utf-8") as f:
-        json.dump(result_items, f, ensure_ascii=False, indent=2)
-    return target
+    return write_approved_knowledge_both(
+        items=result_items,
+        path=output_path,
+        csv_path=csv_output_path,
+    )
+
+
+def export_approved_knowledge_from_excel(
+    excel_path_or_file: str | Path | Any,
+    output_path: str | Path,
+    approved_at: str | None = None,
+    base_path: str | Path | None = None,
+    merge: bool = True,
+    csv_output_path: str | Path | None = None,
+) -> Path:
+    """レビュー済みExcelから approved_knowledge を出力する。
+
+    merge=True（既定）：既存の approved_knowledge（base_path、未指定なら output_path。
+    JSON/CSVのどちらでも可）に対して knowledge_id で upsert する。既存FAQの更新は
+    既存IDに上書き、新規は追加するため重複が出にくい。
+    merge=False：従来どおり「採用行のスナップショット」を上書き出力する。
+
+    JSONとCSVの両方を出力し、戻り値は output_path のフォーマット側のパス。
+    もう一方のパスは `approved_knowledge_companion_path()` で取得できる。
+    """
+    outputs = export_approved_knowledge_files(
+        excel_path_or_file=excel_path_or_file,
+        output_path=output_path,
+        approved_at=approved_at,
+        base_path=base_path,
+        merge=merge,
+        csv_output_path=csv_output_path,
+    )
+    return outputs[detect_format(output_path)]
+
+
+def approved_knowledge_companion_path(path: str | Path) -> Path:
+    """JSON出力に対するCSV出力（またはその逆）のパスを返す。"""
+    return companion_path(path)
 
 
 def main() -> None:
     parser = argparse.ArgumentParser(
-        description="レビュー済みExcelから approved_knowledge.json を出力します。"
+        description=(
+            "レビュー済みExcelから approved_knowledge を出力します"
+            "（JSONとCSVの両方）。"
+        )
     )
     parser.add_argument("excel_path", help="FAQ_final_result.xlsx のパス")
     parser.add_argument(
         "-o",
         "--output",
         default="data/approved_knowledge.json",
-        help="出力先JSONパス",
+        help="出力先パス（.json / .csv）",
+    )
+    parser.add_argument(
+        "--csv-output",
+        default=None,
+        help="CSV出力先（未指定なら--outputと同名の.csv）",
     )
     parser.add_argument(
         "--base",
         default=None,
-        help="upsertのベースとする既存JSON（未指定なら--outputを使う）",
+        help=(
+            "upsertのベースとする既存ファイル（JSON/CSV可。"
+            "未指定なら--outputを使う）"
+        ),
     )
     parser.add_argument(
         "--no-merge",
@@ -253,13 +307,15 @@ def main() -> None:
     )
     args = parser.parse_args()
 
-    output_path = export_approved_knowledge_from_excel(
+    outputs = export_approved_knowledge_files(
         excel_path_or_file=args.excel_path,
         output_path=args.output,
         base_path=args.base,
         merge=args.merge,
+        csv_output_path=args.csv_output,
     )
-    print(f"approved_knowledge出力: {output_path}")
+    print(f"approved_knowledge出力(JSON): {outputs[JSON_FORMAT]}")
+    print(f"approved_knowledge出力(CSV): {outputs[CSV_FORMAT]}")
 
 
 if __name__ == "__main__":
