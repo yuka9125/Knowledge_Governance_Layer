@@ -1,14 +1,31 @@
 from __future__ import annotations
 
+import csv
 import json
 import sqlite3
 from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import Dict, List
+from typing import Dict, List, Sequence
 
 from knowledge_distillation.models import FAQCandidate
 from knowledge_distillation.xlsx_writer import write_xlsx
 from knowledge_distillation.knowledge_output_utils import determine_risk_level
+
+
+# JSON / CSV / Excel で共通の出力項目（この順で並べる）
+KNOWLEDGE_EXPORT_COLUMNS: Sequence[str] = (
+    "knowledge_id",
+    "cluster_id",
+    "question",
+    "answer",
+    "category",
+    "source_logs",
+    "similar_logs_count",
+    "existing_faq_diff_reason",
+    "risk_level",
+    "review_status",
+    "confidence",
+)
 
 
 class KnowledgeStore(ABC):
@@ -25,6 +42,10 @@ class KnowledgeStore(ABC):
     @abstractmethod
     def export_json(self, path: str | Path) -> Path:
         """JSONへエクスポートする。"""
+
+    @abstractmethod
+    def export_csv(self, path: str | Path) -> Path:
+        """CSVへエクスポートする（JSONと同一項目）。"""
 
     @abstractmethod
     def export_excel(self, path: str | Path) -> Path:
@@ -122,41 +143,39 @@ class SQLiteKnowledgeStore(KnowledgeStore):
         )
         return target
 
+    def export_csv(self, path: str | Path) -> Path:
+        target = Path(path)
+        target.parent.mkdir(parents=True, exist_ok=True)
+        rows = self._build_export_rows()
+        # Excelでそのまま開けるようBOM付きUTF-8で書き出す
+        with target.open("w", encoding="utf-8-sig", newline="") as f:
+            writer = csv.writer(f)
+            writer.writerow(KNOWLEDGE_EXPORT_COLUMNS)
+            writer.writerows(rows)
+        return target
+
     def export_excel(self, path: str | Path) -> Path:
         target = Path(path)
         target.parent.mkdir(parents=True, exist_ok=True)
+        rows = self._build_export_rows()
+        return write_xlsx(
+            target, headers=list(KNOWLEDGE_EXPORT_COLUMNS), rows=rows
+        )
+
+    def _build_export_rows(self) -> List[List[str]]:
+        """CSV / Excel共通の行データを作る（列順はJSONの項目順と同じ）。"""
         data = self._build_knowledge_candidates(self.list_faqs())
-        headers = [
-            "knowledge_id",
-            "cluster_id",
-            "question",
-            "answer",
-            "category",
-            "source_logs",
-            "similar_logs_count",
-            "existing_faq_diff_reason",
-            "risk_level",
-            "review_status",
-            "confidence",
-        ]
         rows: List[List[str]] = []
         for knowledge in data:
-            rows.append(
-                [
-                    str(knowledge["knowledge_id"]),
-                    str(knowledge["cluster_id"]),
-                    str(knowledge["question"]),
-                    str(knowledge["answer"]),
-                    str(knowledge["category"]),
-                    json.dumps(knowledge["source_logs"], ensure_ascii=False),
-                    str(knowledge["similar_logs_count"]),
-                    str(knowledge["existing_faq_diff_reason"]),
-                    str(knowledge["risk_level"]),
-                    str(knowledge["review_status"]),
-                    str(knowledge["confidence"]),
-                ]
-            )
-        return write_xlsx(target, headers=headers, rows=rows)
+            row: List[str] = []
+            for column in KNOWLEDGE_EXPORT_COLUMNS:
+                value = knowledge.get(column, "")
+                if isinstance(value, list):
+                    # source_logs は配列なので情報を落とさずJSON文字列にする
+                    value = json.dumps(value, ensure_ascii=False)
+                row.append(str(value))
+            rows.append(row)
+        return rows
 
     def _connect(self) -> sqlite3.Connection:
         return sqlite3.connect(self.db_path)

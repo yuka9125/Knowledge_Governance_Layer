@@ -23,6 +23,43 @@ python -m knowledge_distillation export
 python -m knowledge_distillation.approved_knowledge_exporter FAQ_final_result.xlsx -o data/approved_knowledge.json
 ```
 
+## JSON / CSV output
+
+JSONは従来どおりの契約フォーマットとして残しつつ、同じ内容をCSVでも出力します
+（CSVはExcelでそのまま開けるBOM付きUTF-8）。
+
+| 出力 | JSON | CSV |
+| --- | --- | --- |
+| ナレッジ候補（`export`） | `data/outputs/knowledge_export.json` | `data/outputs/knowledge_export.csv` |
+| Phase 3 最終ナレッジ候補 | `data/outputs/deduplicated_questions_<timestamp>.json` | `data/outputs/deduplicated_questions_<timestamp>.csv` |
+| 承認済みKnowledge | `data/approved_knowledge.json` | `data/approved_knowledge.csv` |
+
+```bash
+# 既定はJSONとCSVの両方。片方だけにしたい場合は --format で指定
+python -m knowledge_distillation export --format csv
+
+# 承認済みKnowledgeもJSON/CSVを同時に出力（--csv-output でCSV先を明示指定も可）
+python -m knowledge_distillation.approved_knowledge_exporter FAQ_final_result.xlsx \
+  -o data/approved_knowledge.json
+```
+
+CSVでは配列項目（`source_logs`）だけJSON文字列として1セルに収めます。
+
+## Duplicate check input (JSON / CSV)
+
+Phase 3-2（既存FAQとの重複判定）の参照元はJSON / CSVのどちらでも構いません。
+
+- `APPROVED_KNOWLEDGE_PATH` に `.csv` を指定すればCSVを直接参照します。指定先のファイルが
+  無い場合だけ、同名の別拡張子（`.json` ⇄ `.csv`）へ自動でフォールバックします
+  （両方ある状態で `.json` を指定していればJSONを読みます）。
+- CSVヘッダーは英語（`knowledge_id,question,answer,category,link_names,approved_status,approved_at`）に加え、
+  日本語ヘッダー（`ナレッジID` / `質問` / `回答` / `カテゴリ` / `参考リンク・資料名`）も受け付けます。
+- `approved_status` 列があるファイルは `approved` の行だけを照合対象にします。列自体が無いCSV
+  （手作りの既存FAQ一覧など）は全行を照合対象として扱います。
+- CSVの文字コードはUTF-8（BOM有無どちらも）とShift-JISに対応します。
+
+`upsert` のベース（`--base`）にもCSVを指定できます。
+
 For a screen-recording demo, start from these synthetic files:
 
 ```text
@@ -73,6 +110,7 @@ Important paths:
 
 - `APPROVED_KNOWLEDGE_PATH`: optional override for the approved Knowledge contract file.
 - Default contract file: `data/approved_knowledge.json`
+- 重複判定の参照元としては `.csv` も指定できます（serving が読む契約ファイルはJSONのまま）。
 
 Azure OpenAI values are deployment names, not model names.
 

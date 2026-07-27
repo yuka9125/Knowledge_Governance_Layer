@@ -68,6 +68,11 @@ def build_parser() -> argparse.ArgumentParser:
         default="data/outputs",
         help="出力ディレクトリ",
     )
+    export_parser.add_argument(
+        "--format",
+        default="json,csv",
+        help="出力形式をカンマ区切りで指定（json / csv、既定は両方）",
+    )
 
     normalize_parser = subparsers.add_parser(
         "normalize", help="既存SNOW互換CSVへ正規化"
@@ -137,7 +142,11 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     if args.command == "export":
-        result = export(db_path=args.db_path, out_dir=args.out_dir)
+        result = export(
+            db_path=args.db_path,
+            out_dir=args.out_dir,
+            formats=parse_comma_separated_cols(args.format),
+        )
         print(json.dumps(result, ensure_ascii=False, indent=2))
         return 0
 

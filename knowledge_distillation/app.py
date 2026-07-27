@@ -17,7 +17,6 @@ FAQ自動生成システム - Streamlit アプリケーション
 """
 
 import glob
-import json
 import os
 import pandas as pd
 import re
@@ -29,6 +28,14 @@ from datetime import datetime
 from dotenv import load_dotenv
 from pathlib import Path
 from knowledge_distillation.display_labels import display_label
+from knowledge_distillation.approved_knowledge_io import (
+    CSV_FORMAT,
+    FAQ_MATCHING_COLUMNS,
+    JSON_FORMAT,
+    load_faq_matching_rows,
+    read_approved_knowledge,
+    resolve_existing_path as resolve_existing_approved_path,
+)
 
 
 def configure_console_encoding():
@@ -96,46 +103,24 @@ def check_environment():
     return len(missing) == 0, missing
 
 
+def resolve_approved_knowledge_path(path=APPROVED_KNOWLEDGE_PATH):
+    """承認済みKnowledgeの実体パスを返す（JSONが無ければ同名CSVを探す）。"""
+    return resolve_existing_approved_path(path)
+
+
 def check_approved_knowledge():
-    """承認済みKnowledgeファイルの存在確認"""
-    return APPROVED_KNOWLEDGE_PATH.exists()
+    """承認済みKnowledgeファイル（JSON or CSV）の存在確認"""
+    return resolve_approved_knowledge_path() is not None
 
 
 def load_approved_knowledge_as_faq_df(path=APPROVED_KNOWLEDGE_PATH):
-    """approved_knowledge.jsonをPhase 3-2比較用DataFrameへ変換する。"""
-    target = Path(path)
-    if not target.exists():
+    """承認済みKnowledge（JSON/CSV）をPhase 3-2比較用DataFrameへ変換する。"""
+    target = resolve_existing_approved_path(path)
+    if target is None:
         return None
 
-    with target.open("r", encoding="utf-8") as f:
-        data = json.load(f)
-
-    if not isinstance(data, list):
-        raise ValueError("approved_knowledge.json は配列形式である必要があります。")
-
-    rows = []
-    for item in data:
-        if not isinstance(item, dict):
-            continue
-        if str(item.get("approved_status", "")).strip().lower() != "approved":
-            continue
-
-        question = str(item.get("question", "")).strip()
-        answer = str(item.get("answer", "")).strip()
-        if not question or not answer:
-            continue
-
-        rows.append(
-            {
-                "質問": question,
-                "回答": answer,
-                "カテゴリ": str(item.get("category", "")).strip(),
-                "knowledge_id": str(item.get("knowledge_id", "")).strip(),
-                "approved_at": str(item.get("approved_at", "")).strip(),
-            }
-        )
-
-    return pd.DataFrame(rows)
+    rows = load_faq_matching_rows(target)
+    return pd.DataFrame(rows, columns=list(FAQ_MATCHING_COLUMNS))
 
 
 STANDARD_COLUMN_LABELS = {
@@ -469,6 +454,43 @@ def display_results():
                 type="primary",
             )
 
+    # 同じナレッジ候補をCSV / JSONでも提供（他ツールでの再利用向け）
+    knowledge_result_files = []
+    for extension, mime, label in (
+        ("csv", "text/csv", "ナレッジ候補CSV（deduplicated_questions.csv）"),
+        (
+            "json",
+            "application/json",
+            "ナレッジ候補JSON（deduplicated_questions.json）",
+        ),
+    ):
+        matched_files = sorted(
+            glob.glob(
+                os.path.join(output_dir, f"deduplicated_questions_*.{extension}")
+            ),
+            reverse=True,
+        )
+        if matched_files:
+            knowledge_result_files.append(
+                (matched_files[0], extension, mime, label)
+            )
+
+    if knowledge_result_files:
+        st.caption("同じナレッジ候補をCSV / JSONでもダウンロードできます。")
+        columns = st.columns(len(knowledge_result_files))
+        for column, (path, extension, mime, label) in zip(
+            columns, knowledge_result_files
+        ):
+            with column:
+                with open(path, "rb") as f:
+                    st.download_button(
+                        label=label,
+                        data=f.read(),
+                        file_name=f"deduplicated_questions.{extension}",
+                        mime=mime,
+                        type="secondary",
+                    )
+
     st.divider()
 
     # 新しい処理を開始するボタン
@@ -490,35 +512,43 @@ def display_approved_knowledge_exporter():
     st.header("承認済みKnowledge出力")
     st.caption(
         "レビュー済みの FAQ_final_result.xlsx をアップロードすると、"
-        "レビュー結果が「採用」の行だけ approved_knowledge.json に出力します。"
+        "レビュー結果が「採用」の行だけ approved_knowledge.json と "
+        "approved_knowledge.csv に出力します（内容は同じ）。"
     )
 
     reviewed_excel = st.file_uploader(
         "レビュー結果を入力した FAQ_final_result.xlsx",
         type=["xlsx"],
         key="reviewed_excel_for_approved_knowledge",
-        help="Sheet1のレビュー結果が「採用」の行だけ approved_knowledge.json に出力します",
+        help=(
+            "Sheet1のレビュー結果が「採用」の行だけ approved_knowledge.json / "
+            "approved_knowledge.csv に出力します"
+        ),
     )
     if reviewed_excel is not None:
         try:
             from knowledge_distillation.approved_knowledge_exporter import (
-                export_approved_knowledge_from_excel,
+                export_approved_knowledge_files,
                 load_approved_knowledge_from_excel,
             )
 
             approved_items = load_approved_knowledge_from_excel(reviewed_excel)
             reviewed_excel.seek(0)
             approved_path = APPROVED_KNOWLEDGE_PATH
-            export_approved_knowledge_from_excel(reviewed_excel, approved_path)
+            outputs = export_approved_knowledge_files(reviewed_excel, approved_path)
+            approved_path = outputs[JSON_FORMAT]
+            approved_csv_path = outputs[CSV_FORMAT]
 
             try:
-                with open(approved_path, encoding="utf-8") as f:
-                    total_count = len(json.load(f))
+                total_count = len(read_approved_knowledge(approved_path))
             except Exception:
                 total_count = len(approved_items)
             st.success(
                 f"今回採用: {len(approved_items)}件 / 統合後 合計: {total_count}件"
                 "（既存FAQ更新は上書き・新規は追加）"
+            )
+            st.caption(
+                f"出力: {approved_path}（JSON） / {approved_csv_path}（CSV）"
             )
 
             # serving（本番URL）への反映は、ローカル出力とは分け、**明示ボタンを押した時だけ**
@@ -551,16 +581,27 @@ def display_approved_knowledge_exporter():
                     )
             except Exception as e:  # noqa: BLE001
                 st.warning(f"serving への反映に失敗しました（ローカル出力は成功）: {e}")
-            with open(approved_path, "rb") as f:
-                st.download_button(
-                    label="⬇️ approved_knowledge.json をダウンロード（ローカル保存・本番反映なし）",
-                    data=f.read(),
-                    file_name="approved_knowledge.json",
-                    mime="application/json",
-                    type="secondary",
-                )
+            download_col1, download_col2 = st.columns(2)
+            with download_col1:
+                with open(approved_path, "rb") as f:
+                    st.download_button(
+                        label="⬇️ approved_knowledge.json をダウンロード（ローカル保存・本番反映なし）",
+                        data=f.read(),
+                        file_name="approved_knowledge.json",
+                        mime="application/json",
+                        type="secondary",
+                    )
+            with download_col2:
+                with open(approved_csv_path, "rb") as f:
+                    st.download_button(
+                        label="⬇️ approved_knowledge.csv をダウンロード（Excelで開ける同内容）",
+                        data=f.read(),
+                        file_name="approved_knowledge.csv",
+                        mime="text/csv",
+                        type="secondary",
+                    )
         except Exception as e:
-            st.error(f"approved_knowledge.json の出力に失敗しました: {e}")
+            st.error(f"approved_knowledge の出力に失敗しました: {e}")
 
 
 # ================================================================================
@@ -730,11 +771,15 @@ with st.sidebar:
     faq_df = None
     faq_source = None
 
-    if check_approved_knowledge():
+    approved_source_path = resolve_approved_knowledge_path()
+
+    if approved_source_path is not None:
         try:
             faq_df = load_approved_knowledge_as_faq_df()
             if faq_df is not None and len(faq_df) > 0:
-                faq_source = f"approved_knowledge.json ({APPROVED_KNOWLEDGE_PATH})"
+                faq_source = (
+                    f"{approved_source_path.name} ({approved_source_path})"
+                )
                 st.success("✅ 承認済みKnowledgeを比較対象として読み込みました")
                 st.metric("承認済みKnowledge数", f"{len(faq_df)}件")
 
@@ -753,22 +798,27 @@ with st.sidebar:
                     st.dataframe(faq_df[preview_cols].head(5))
             else:
                 st.warning(
-                    "approved_knowledge.json は存在しますが、"
+                    f"{approved_source_path.name} は存在しますが、"
                     "approved_status=approved の有効なKnowledgeがありません。"
                 )
                 faq_df = None
         except Exception as e:
-            st.error(f"❌ approved_knowledge.json の読込に失敗しました: {e}")
+            st.error(
+                f"❌ 承認済みKnowledge（{approved_source_path.name}）"
+                f"の読込に失敗しました: {e}"
+            )
             faq_df = None
     else:
         st.info(
-            f"approved_knowledge.json がまだありません（{APPROVED_KNOWLEDGE_PATH}）。"
+            f"承認済みKnowledgeがまだありません（{APPROVED_KNOWLEDGE_PATH} "
+            "または同名の .csv）。"
             "先にレビュー済みExcelから承認済みKnowledgeを出力してください。"
         )
 
     st.caption(
         "この画面では既存FAQ CSVのアップロードは不要です。"
-        "Phase 3-2は承認済みKnowledgeだけを既存FAQとして照合します。"
+        "Phase 3-2は承認済みKnowledge（JSON / CSV のどちらでも可）だけを"
+        "既存FAQとして照合します。"
     )
 
     st.divider()

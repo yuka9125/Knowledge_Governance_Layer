@@ -75,15 +75,24 @@ def ingest(
 def export(
     db_path: str = "data/knowledge/knowledge.db",
     out_dir: str = "data/outputs",
+    formats: Sequence[str] | None = None,
 ) -> dict:
+    """ナレッジをJSON / CSVで出力する（既定は両方）。"""
+    selected = [fmt.lower().strip() for fmt in (formats or ("json", "csv"))]
+    unsupported = [fmt for fmt in selected if fmt not in ("json", "csv")]
+    if unsupported:
+        raise ValueError(f"未対応の出力形式です: {', '.join(unsupported)}")
+
     out = Path(out_dir)
     out.mkdir(parents=True, exist_ok=True)
     store = SQLiteKnowledgeStore(db_path=db_path)
-    json_path = store.export_json(out / "knowledge_export.json")
-    return {
-        "json_path": str(json_path),
-        "count": len(store.list_faqs()),
-    }
+
+    result: dict = {"count": len(store.list_faqs())}
+    if "json" in selected:
+        result["json_path"] = str(store.export_json(out / "knowledge_export.json"))
+    if "csv" in selected:
+        result["csv_path"] = str(store.export_csv(out / "knowledge_export.csv"))
+    return result
 
 
 def normalize(
